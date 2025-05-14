@@ -27,6 +27,8 @@ set (androidaudioplugin_SOURCES
 	"core/aapxs/urid-aapxs.cpp"
 )
 
+set(CMAKE_BUILD_TYPE Debug)
+
 if (ANDROID)
 set (androidaudioplugin_SOURCES
 	${androidaudioplugin_SOURCES}

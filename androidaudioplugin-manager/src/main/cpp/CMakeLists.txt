@@ -21,6 +21,8 @@ set (androidaudioplugin-manager_SOURCES
 		JNI.cpp
 	)
 
+set(CMAKE_BUILD_TYPE Debug)
+
 if (ANDROID)
 set (androidaudioplugin-manager_SOURCES
 	${androidaudioplugin-manager_SOURCES}

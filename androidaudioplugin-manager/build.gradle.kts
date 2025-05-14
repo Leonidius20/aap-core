@@ -19,6 +19,7 @@ android {
         externalNativeBuild {
             cmake {
                 arguments ("-DANDROID_STL=c++_shared", "-DAAP_ENABLE_ASAN=" + (if (enable_asan) "1" else "0"))
+                cppFlags("-g") // enables debug info
             }
         }
     }
@@ -26,14 +27,23 @@ android {
     buildTypes {
         debug {
             packaging.jniLibs.keepDebugSymbols.add("**/*.so")
+            isJniDebuggable = true
             externalNativeBuild {
                 cmake {
                     // we cannot error out cmidi2.h as we don't compile cmidi2_test.h
                     //cppFlags ("-Werror")
+                    cppFlags("-g") // enables debug info
                 }
+            }
+            ndk {
+                debugSymbolLevel ="FULL"  // Ensures full debug symbols are included
             }
         }
         release {
+            isJniDebuggable = true
+            ndk {
+                debugSymbolLevel ="FULL"  // Ensures full debug symbols are included
+            }
             isMinifyEnabled = false
             proguardFiles (getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }

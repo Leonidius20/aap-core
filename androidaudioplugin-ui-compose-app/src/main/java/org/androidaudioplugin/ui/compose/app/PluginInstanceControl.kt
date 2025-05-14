@@ -78,6 +78,7 @@ fun PluginInstanceControl(scope: PluginDetailsScope,
                           pluginInfo: PluginInformation,
                           instance: NativeRemotePluginInstance,
 ) {
+    // this is the plugin UI
     MidiSettings(midiSettingsFlags = instance.getMidiMappingPolicy(),
         midiSeetingsFlagsChanged = { newFlags ->
             scope.setNewMidiMappingFlags(
