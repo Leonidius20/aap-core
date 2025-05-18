@@ -10,6 +10,8 @@ set (androidaudioplugin-manager_SOURCES
         AudioDeviceManager.cpp
 		OboeAudioDeviceManager.cpp
 		VirtualAudioDeviceManager.cpp
+		FileAudioDeviceManager.cpp
+		FileAudioDeviceOut.cpp
 		AudioGraph.cpp
 		AudioGraphNode.AudioDevice.cpp
 		AudioGraphNode.DataSource.cpp
