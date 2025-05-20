@@ -2,14 +2,17 @@ package org.androidaudioplugin.manager
 
 import dev.atsushieno.ktmidi.Ump
 import dev.atsushieno.ktmidi.UmpFactory
-import dev.atsushieno.ktmidi.UmpRetriever
 import dev.atsushieno.ktmidi.toPlatformNativeBytes
 import org.androidaudioplugin.hosting.NativeRemotePluginInstance
 import org.androidaudioplugin.hosting.UmpHelper
 
 class PluginPlayer private constructor(private val native: Long) : AutoCloseable {
+
     companion object {
         const val sample_audio_filename = "androidaudioplugin_manager_sample_audio.ogg"
+
+        @Volatile
+        private var sampleCallback: (Float) -> Unit = {}
 
         fun create(sampleRate: Int, framesPerCallback: Int, channelCount: Int) =
             PluginPlayer(createNewPluginPlayer(sampleRate, framesPerCallback, channelCount))
@@ -20,6 +23,12 @@ class PluginPlayer private constructor(private val native: Long) : AutoCloseable
 
         @JvmStatic
         private external fun createNewPluginPlayer(sampleRate: Int, framesPerCallback: Int, channelCount: Int): Long
+
+        @JvmStatic
+        fun callback(sample: Float) {
+            // Log.d("PluginPlayer", "Got {sample} sample in callback")
+            sampleCallback(sample)
+        }
     }
 
     override fun close() {
