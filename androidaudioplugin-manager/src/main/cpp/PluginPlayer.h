@@ -11,7 +11,7 @@ namespace aap {
         SimpleLinearAudioGraph graph;
 
     public:
-        PluginPlayer(PluginPlayerConfiguration &configuration);
+        PluginPlayer(PluginPlayerConfiguration &configuration, int outFileFd);
 
         virtual ~PluginPlayer();
 

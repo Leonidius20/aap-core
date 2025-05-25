@@ -1,9 +1,9 @@
 #include "PluginPlayer.h"
 #include <aap/core/host/plugin-instance.h>
 
-aap::PluginPlayer::PluginPlayer(aap::PluginPlayerConfiguration &pluginPlayerConfiguration) :
+aap::PluginPlayer::PluginPlayer(aap::PluginPlayerConfiguration &pluginPlayerConfiguration, int outFileFd) :
                                 configuration(pluginPlayerConfiguration),
-                                graph(configuration.getSampleRate(), configuration.getFramesPerCallback(), configuration.getChannelCount()) {
+                                graph(configuration.getSampleRate(), configuration.getFramesPerCallback(), configuration.getChannelCount(), outFileFd) {
 }
 
 aap::PluginPlayer::~PluginPlayer() {

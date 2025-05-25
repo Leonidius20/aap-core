@@ -14,15 +14,15 @@ class PluginPlayer private constructor(private val native: Long) : AutoCloseable
         @Volatile
         private var sampleCallback: (Float) -> Unit = {}
 
-        fun create(sampleRate: Int, framesPerCallback: Int, channelCount: Int) =
-            PluginPlayer(createNewPluginPlayer(sampleRate, framesPerCallback, channelCount))
+        fun create(sampleRate: Int, framesPerCallback: Int, channelCount: Int, outFileFd: Int = -1) =
+            PluginPlayer(createNewPluginPlayer(sampleRate, framesPerCallback, channelCount, outFileFd))
 
         init {
             System.loadLibrary("androidaudioplugin-manager")
         }
 
         @JvmStatic
-        private external fun createNewPluginPlayer(sampleRate: Int, framesPerCallback: Int, channelCount: Int): Long
+        private external fun createNewPluginPlayer(sampleRate: Int, framesPerCallback: Int, channelCount: Int, outFileFd: Int): Long
 
         @JvmStatic
         fun callback(sample: Float) {

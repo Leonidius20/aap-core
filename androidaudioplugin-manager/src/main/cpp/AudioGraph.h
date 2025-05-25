@@ -45,7 +45,7 @@ namespace aap {
         }
 
     public:
-        SimpleLinearAudioGraph(int32_t sampleRate, uint32_t framesPerCallback, int32_t channelsInAudioBus);
+        SimpleLinearAudioGraph(int32_t sampleRate, uint32_t framesPerCallback, int32_t channelsInAudioBus, int outFileFd);
         virtual ~SimpleLinearAudioGraph();
 
         void setPlugin(RemotePluginInstance* instance);

@@ -38,9 +38,10 @@ JNIEXPORT jlong JNICALL
 Java_org_androidaudioplugin_manager_PluginPlayer_createNewPluginPlayer(JNIEnv *env, jclass clazz,
                                                                        jint sampleRate,
                                                                        jint framesPerCallback,
-                                                                       jint channelCount) {
+                                                                       jint channelCount,
+                                                                       jint outFileFd) {
     aap::PluginPlayerConfiguration configuration{sampleRate, framesPerCallback, channelCount};
-    return (jlong) (void*) new aap::PluginPlayer(configuration);
+    return (jlong) (void*) new aap::PluginPlayer(configuration, outFileFd);
 }
 
 extern "C"

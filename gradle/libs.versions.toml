@@ -1,6 +1,6 @@
 [versions]
 
-aap-core = "0.8.0"
+aap-core = "0.8.2"
 aap-lv2 = "0.3.0"
 
 accompanist-drawablepainter = "0.32.0"

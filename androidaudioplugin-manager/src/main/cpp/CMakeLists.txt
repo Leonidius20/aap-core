@@ -21,6 +21,7 @@ set (androidaudioplugin-manager_SOURCES
 		PluginPlayer.cpp
 		PluginPlayerConfiguration.cpp
 		JNI.cpp
+		fdstream.h
 	)
 
 set(CMAKE_BUILD_TYPE Debug)
