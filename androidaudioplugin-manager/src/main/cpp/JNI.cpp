@@ -10,7 +10,7 @@ Java_org_androidaudioplugin_manager_PluginPlayer_loadAudioResourceNative(JNIEnv 
                                                                          jstring filename) {
     jboolean isDataCopy{false};
     auto data = (uint8_t*) env->GetByteArrayElements(bytes, &isDataCopy);
-    jboolean isNameCopy{false};
+    jboolean isNameCopy{true};
     auto name = env->GetStringUTFChars(filename, &isNameCopy);
     ((aap::PluginPlayer*) player)->setAudioSource(data, env->GetArrayLength(bytes), name);
     if (isNameCopy)

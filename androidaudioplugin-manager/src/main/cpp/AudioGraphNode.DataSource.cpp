@@ -7,7 +7,7 @@
 #include <audio/choc_SincInterpolator.h>
 
 
-class SeekableByteBuffer : public std::streambuf {
+/*class SeekableByteBuffer : public std::streambuf {
 public:
     SeekableByteBuffer(uint8_t* data, std::size_t size) {
         setg(reinterpret_cast<char*>(data), reinterpret_cast<char*>(data), reinterpret_cast<char*>(data) + size);
@@ -21,7 +21,47 @@ public:
         }
         return gptr() - eback();
     }
+};*/
+
+class SeekableByteBuffer : public std::streambuf {
+public:
+    SeekableByteBuffer(uint8_t* data, std::size_t size)
+            : begin(reinterpret_cast<char*>(data)),
+              end(reinterpret_cast<char*>(data) + size)
+    {
+        setg(begin, begin, end);
+    }
+
+protected:
+    std::streampos seekoff(std::streamoff off, std::ios_base::seekdir dir,
+                           std::ios_base::openmode which) override {
+        char* new_gptr = nullptr;
+
+        if (dir == std::ios_base::beg) {
+            new_gptr = begin + off;
+        } else if (dir == std::ios_base::cur) {
+            new_gptr = gptr() + off;
+        } else if (dir == std::ios_base::end) {
+            new_gptr = end + off;
+        }
+
+        if (new_gptr < begin || new_gptr > end)
+            return -1; // causes failbit
+
+        setg(begin, new_gptr, end);
+        return gptr() - begin;
+    }
+
+    std::streampos seekpos(std::streampos pos,
+                           std::ios_base::openmode which) override {
+        return seekoff(pos, std::ios_base::beg, which);
+    }
+
+private:
+    char* begin;
+    char* end;
 };
+
 
 aap::AudioDataSourceNode::AudioDataSourceNode(aap::AudioGraph *ownerGraph) :
         AudioGraphNode(ownerGraph),
@@ -91,6 +131,9 @@ int32_t aap::AudioDataSourceNode::setAudioSource(uint8_t *data, int dataLength, 
         if (format->filenameSuffixMatches(filename)) {
             SeekableByteBuffer buffer(data, dataLength);
             auto stream = std::make_shared<std::istream>(&buffer);
+
+            // so we can replace this with file input?
+
             auto reader = format->createReader(stream);
             auto props = reader->getProperties();
             // AudioBuffer tmpData{(int32_t) props.numChannels, (int32_t) props.numFrames};
