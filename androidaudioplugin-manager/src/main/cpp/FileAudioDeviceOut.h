@@ -9,6 +9,7 @@
 #include "fdstream.h"
 #include <audio/choc_SampleBuffers.h>
 #include <audio/choc_AudioFileFormat_WAV.h>
+#include <limits>
 // #include <android/log.h>
 
 #define LOG_TAG "FileAudioDeviceOut"
@@ -23,9 +24,10 @@ namespace aap {
         std::unique_ptr<choc::audio::AudioFileWriter> fileWriter;
         AudioBuffer aap_buffer;
         uint32_t framesPerCallback;
-        // todo: num of frames to write
 
     public:
+        int32_t targetNumOfFrames = std::numeric_limits<int32_t>::max();
+
         FileAudioDeviceOut(uint32_t sampleRate, uint32_t framesPerCallback, int32_t numChannels, int outputFileDescriptor)
             : aap_buffer(numChannels, (int32_t) framesPerCallback), framesPerCallback(framesPerCallback) {
 
@@ -58,19 +60,17 @@ namespace aap {
         }
 
         void startCallback() override {
-            requestAudio();
+            startLoop();
         }
 
         void stopCallback() override {
-            if (fileWriter) {
-                fileWriter->flush();
-            }
+            // moved flushing to flushFile();
         }
 
         void write(aap::AudioBuffer *audioDataToWrite, int32_t bufferPosition, int32_t numFrames) override {
             // write data to file and buffer (idk why we would need it in the buffer tbh)
-            choc::buffer::FrameRange range{0, (uint32_t ) numFrames};
-            choc::buffer::copy(aap_buffer.audio.getFrameRange(range), audioDataToWrite->audio.getView().getFrameRange(range));
+            //choc::buffer::FrameRange range{0, (uint32_t ) numFrames};
+            //choc::buffer::copy(aap_buffer.audio.getFrameRange(range), audioDataToWrite->audio.getView().getFrameRange(range));
             if (fileWriter) {
                 fileWriter->appendFrames(audioDataToWrite->audio);
             }
@@ -80,17 +80,30 @@ namespace aap {
             memset(aap_buffer.midi_in, 0, aap_buffer.midi_capacity);
             memset(aap_buffer.midi_out, 0, aap_buffer.midi_capacity);
             // memset(oboeAudioData, 0, numFrames * sizeof(float));
-
-            // make new request
-            requestAudio();
         }
 
     private:
 
         // request audio from the framework
-        void requestAudio() {
-            // kick callback to generate some data
-            aap_callback(callback_context, &aap_buffer, framesPerCallback);
+        void startLoop() {
+            int32_t numFramesProcessed = 0;
+            while(numFramesProcessed < targetNumOfFrames) {
+                // kick callback to generate some data
+                aap_callback(callback_context, &aap_buffer, framesPerCallback);
+
+                // write out
+                write(&aap_buffer, 0, framesPerCallback);
+
+                numFramesProcessed += framesPerCallback;
+            }
+            // maybe stop after that??
+            flushFile();
+        }
+
+        void flushFile() {
+            if (fileWriter) {
+                fileWriter->flush();
+            }
         }
 
     };

@@ -98,7 +98,7 @@ aap::OboeAudioDeviceManager::openDefaultInput(uint32_t sampleRate, uint32_t fram
     return input.get();
 }
 
-aap::AudioDeviceOut *
+aap::FileAudioDeviceOut *
 aap::OboeAudioDeviceManager::openDefaultOutput(uint32_t sampleRate, uint32_t framesPerCallback, int32_t numChannels, int outFileFd) {
     // FIXME: this should not be created twice
     //assert(output == nullptr);

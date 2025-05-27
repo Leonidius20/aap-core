@@ -3,6 +3,7 @@
 
 #include "AudioDevice.h"
 #include "AAPMidiEventTranslator.h"
+#include "FileAudioDeviceOut.h"
 #include <aap/core/host/plugin-instance.h>
 #include <aap/unstable/utility.h>
 #ifndef CMIDI2_H_INCLUDED // it is only a workaround to avoid reference resolution failure at aap-juce-* repos.
@@ -73,17 +74,17 @@ namespace aap {
      * results on an AudioDestinationNode and let the client app retrieve the buffer.
      */
     class AudioDeviceOutputNode : public AudioGraphNode {
-        AudioDeviceOut* output;
+        FileAudioDeviceOut* output;
         int32_t consumer_position{0};
 
     public:
-        AudioDeviceOutputNode(AudioGraph* ownerGraph, AudioDeviceOut* output) :
+        AudioDeviceOutputNode(AudioGraph* ownerGraph, FileAudioDeviceOut* output) :
                 AudioGraphNode(ownerGraph),
                 output(output) {
         }
         virtual ~AudioDeviceOutputNode();
 
-        AudioDeviceOut* getDevice() { return output; }
+        FileAudioDeviceOut* getDevice() { return output; }
 
         void start() override;
         void pause() override;
@@ -139,10 +140,10 @@ namespace aap {
 
         /// Sets PCM data of some formats, as indicated by the filename.
         /// Currently ogg, mp3 and wav formats work.
-        /// Returns true if loaded successfully, false if not.
+        /// Returns positive length of audio in frames after resampling if success, -1 otherwise
         ///
         /// It locks the data source until it finishes loading and converting data into `audio_data`.
-        bool setAudioSource(uint8_t *data, int dataLength, const char *filename);
+        int32_t setAudioSource(uint8_t *data, int dataLength, const char *filename);
     };
 
 

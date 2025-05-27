@@ -6,7 +6,7 @@
 
 #include "AudioDeviceManager.h"
 
-namespace aap {
+/*namespace aap {
 
     class VirtualAudioDeviceIn : public AudioDeviceIn {
         bool running{false};
@@ -54,7 +54,7 @@ namespace aap {
         AudioDeviceOut * openDefaultOutput(uint32_t sampleRate, uint32_t framesPerCallback, int32_t numChannels, int outFileFd) override { return output.get(); }
     };
 
-}
+}*/
 
 
 #endif //AAP_CORE_VIRTUALAUDIODEVICEMANAGER_H

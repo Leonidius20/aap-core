@@ -84,7 +84,7 @@ choc::audio::OggAudioFileFormat<false> formatOgg{};
 choc::audio::FLACAudioFileFormat<false> formatFlac{};
 choc::audio::AudioFileFormat* formats[] {&formatWav, &formatMp3, &formatOgg, &formatFlac};
 
-bool aap::AudioDataSourceNode::setAudioSource(uint8_t *data, int dataLength, const char *filename) {
+int32_t aap::AudioDataSourceNode::setAudioSource(uint8_t *data, int dataLength, const char *filename) {
     const std::lock_guard <NanoSleepLock> lock{data_source_mutex};
 
     for (auto format : formats) {
@@ -96,7 +96,7 @@ bool aap::AudioDataSourceNode::setAudioSource(uint8_t *data, int dataLength, con
             AudioBuffer tmpData{(int32_t) props.numChannels, (int32_t) props.numFrames};
             if (!reader->readFrames(0, tmpData.audio)) {
                 AAP_ASSERT_FALSE;
-                return false;
+                return -1;
             }
 
             // resample
@@ -105,7 +105,7 @@ bool aap::AudioDataSourceNode::setAudioSource(uint8_t *data, int dataLength, con
             audio_data = std::make_unique<AudioBuffer>((int32_t) props.numChannels, targetFrames);
             choc::interpolation::sincInterpolate(audio_data->audio, tmpData.audio);
 
-            return true;
+            return targetFrames;
         }
     }
 

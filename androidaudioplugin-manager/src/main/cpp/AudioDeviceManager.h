@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "AudioDevice.h"
+#include "FileAudioDeviceOut.h"
 
 namespace aap {
     class AudioDeviceManager {
@@ -13,7 +14,7 @@ namespace aap {
         static AudioDeviceManager* getInstance();
 
         virtual AudioDeviceIn* openDefaultInput(uint32_t sampleRate, uint32_t framesPerCallback, int32_t numChannels) = 0;
-        virtual AudioDeviceOut* openDefaultOutput(uint32_t sampleRate, uint32_t framesPerCallback, int32_t numChannels, int outFileFd) = 0;
+        virtual FileAudioDeviceOut* openDefaultOutput(uint32_t sampleRate, uint32_t framesPerCallback, int32_t numChannels, int outFileFd) = 0;
     };
 }
 
