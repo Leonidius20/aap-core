@@ -20,6 +20,8 @@ extern "C" {
 #define PARAM_ID_DELAY_L 2
 #define PARAM_ID_DELAY_R 3
 
+#define PARAM_ID_CLIP_THRESHOLD 4
+
 typedef struct SamplePluginSpecific {
     AndroidAudioPluginHost host;
     float modL{0.5f};
@@ -28,6 +30,8 @@ typedef struct SamplePluginSpecific {
     float modR_pn[128];
     uint32_t delayL{0};
     uint32_t delayR{0};
+    float clippingThreshold{0.5f}; // default - mid way
+
     int32_t midiInPort{-1};
     int32_t midiOutPort{-1};
     int32_t audioInPortL{-1};
@@ -98,6 +102,15 @@ bool readMidi2Parameter(uint8_t *group, uint8_t* channel, uint8_t* key, uint8_t*
         return false;
     auto raw = (uint32_t*) ump;
     return aapReadMidi2ParameterSysex8(group, channel, key, extra, index, value, *raw, *(raw + 1), *(raw + 2), *(raw + 3));
+}
+
+float applyClipping(float sample, float threshold) {
+    if (sample > threshold) sample = threshold;
+    else if (sample < -threshold) sample = -threshold;
+
+    float divider = threshold == 0.0f ? 0.01f : threshold;
+
+    return sample / divider;
 }
 
 void sample_plugin_process(AndroidAudioPlugin *plugin,
@@ -197,6 +210,9 @@ process_acc:
                     valueIn0To2048 = *((float*) &rawIntValue);
                     ctx->delayR = (uint32_t) valueIn0To2048 + (relative ? ctx->delayR : 0);
                     break;
+                case PARAM_ID_CLIP_THRESHOLD:
+                    ctx->clippingThreshold = paramValue;
+                    break;
                 default:
                     continue; // invalid parameter index FIXME: log it
             }
@@ -204,10 +220,14 @@ process_acc:
     }
 
     for (int i = 0; i < size / sizeof(float); i++) {
-        if (i >= ctx->delayL)
-            fOL[i] = (float) (fIL[i - ctx->delayL] * ctx->modL);
-        if (i >= ctx->delayR)
-            fOR[i] = (float) (fIR[i - ctx->delayR] * ctx->modR);
+        if (i >= ctx->delayL) {
+            float leftSample = fIL[i - ctx->delayL] * ctx->modL;
+            fOL[i] = applyClipping(leftSample, ctx->clippingThreshold);
+        }
+        if (i >= ctx->delayR) {
+            float rightSample = fIR[i - ctx->delayR] * ctx->modR;
+            fOR[i] = applyClipping(rightSample, ctx->clippingThreshold);
+        }
     }
 
     /* FIXME: This is for testing minBufferSize, but now it's gone because we don't use port for it.
@@ -244,7 +264,7 @@ aap_state_extension_t state_extension{nullptr,
 // parameters extension
 
 int32_t sample_plugin_get_parameter_count(aap_parameters_extension_t* ext, AndroidAudioPlugin* plugin) {
-    return 8;
+    return 9;
 }
 
 aap_parameter_info_t parameter_infos[] {
@@ -252,6 +272,7 @@ aap_parameter_info_t parameter_infos[] {
         {1, "Output Volume R", "", 0.0, 1.0, 0.5},
         {2, "Delay L", "", 0, 2048, 0},
         {3, "Delay R", "", 0, 2048, 256},
+        {PARAM_ID_CLIP_THRESHOLD, "Clipping Threshold", "", 0.0, 1.0, 0.5},
         {11, "Stub Parameter 4", "", 0, 1,0 },
         {12, "Stub Parameter 5", "", 0, 1,0 },
         {13, "Stub Parameter 6", "", 0, 1,0 },

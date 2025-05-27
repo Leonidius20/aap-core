@@ -1,5 +1,5 @@
 <plugins xmlns="urn:org.androidaudioplugin.core">
-  <plugin name="Test Filter" category="Effect" developer="AAP Developers"
+  <plugin name="Test Distortion" category="Effect" developer="AAP Developers"
       unique-id="urn:org.androidaudioplugin/samples/aapbarebonepluginsample/TestFilter"
       library="libaapbarebonepluginsample.so"
       gui:ui-view-factory="org.androidaudioplugin.ui.compose.ComposeAudioPluginViewFactory"
