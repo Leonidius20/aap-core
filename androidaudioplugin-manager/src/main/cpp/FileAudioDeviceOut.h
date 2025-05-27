@@ -8,11 +8,8 @@
 #include "AudioDevice.h"
 #include "fdstream.h"
 #include <audio/choc_SampleBuffers.h>
-#include <fcntl.h>    // open
-#include <unistd.h>   // write, close
-#include <jni.h>
 #include <audio/choc_AudioFileFormat_WAV.h>
-#include <android/log.h>
+// #include <android/log.h>
 
 #define LOG_TAG "FileAudioDeviceOut"
 
@@ -34,7 +31,7 @@ namespace aap {
 
             if (outputFileDescriptor == -1) {
                 this->fileWriter = std::unique_ptr<choc::audio::AudioFileWriter>(nullptr);
-                __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, "Invalid out file descriptor (-1)");
+                // __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, "Invalid out file descriptor (-1)");
             } else {
                 auto stream = createOstreamFromFd(outputFileDescriptor);
                 choc::audio::WAVAudioFileFormat<true> formatWav{};
@@ -47,10 +44,6 @@ namespace aap {
 
                 this->fileWriter = formatWav.createWriter(stream, props);
             }
-
-
-            // todo: we should probably also create some sort of buffer here sized
-            // framesPerCallback????
         }
 
         ~FileAudioDeviceOut() {
@@ -66,20 +59,14 @@ namespace aap {
 
         void startCallback() override {
             requestAudio();
-
-
-
-            // todo: instruct to create a file and prepare to write data to it
         }
 
         void stopCallback() override {
-            // todo: instruct to flush buffer (if i implement a buffer, as i should)
-            // and to save the file
-            // flush file
+            if (fileWriter) {
+                fileWriter->flush();
+            }
         }
 
-        // todo: write to file descriptor passed from kotlin?
-        // https://developer.android.com/ndk/reference/group/file-descriptor
         void write(aap::AudioBuffer *audioDataToWrite, int32_t bufferPosition, int32_t numFrames) override {
             // write data to file and buffer (idk why we would need it in the buffer tbh)
             choc::buffer::FrameRange range{0, (uint32_t ) numFrames};

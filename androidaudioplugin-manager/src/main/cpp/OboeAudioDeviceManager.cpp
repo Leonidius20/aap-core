@@ -2,7 +2,7 @@
 #include "OboeAudioDeviceManager.h"
 #include <audio/choc_SampleBuffers.h>
 #include <containers/choc_VariableSizeFIFO.h>
-#include "fdstream.h"
+// #include "fdstream.h"
 #include <audio/choc_AudioFileFormat_WAV.h>
 
 namespace aap {
@@ -17,7 +17,6 @@ namespace aap {
         AudioDeviceCallback *aap_callback;
         AudioBuffer aap_buffer;
         void* oboe_buffer;
-        // TODO: file here
 
         oboe::DataCallbackResult onAudioInputReady(oboe::AudioStream *audioStream, void *audioData, int32_t numFrames);
         oboe::DataCallbackResult onAudioOutputReady(oboe::AudioStream *audioStream, void *audioData, int32_t numFrames);
@@ -66,7 +65,7 @@ namespace aap {
     class OboeAudioDeviceOut :
             public AudioDeviceOut {
         OboeAudioDevice impl;
-        std::unique_ptr<choc::audio::AudioFileWriter> fileWriter;
+        // std::unique_ptr<choc::audio::AudioFileWriter> fileWriter;
 
     public:
         OboeAudioDeviceOut(uint32_t sampleRate, uint32_t framesPerCallback, int32_t numChannels, int outputFileDescriptor);
@@ -75,9 +74,9 @@ namespace aap {
 
         void stopCallback() override {
             impl.stopCallback();
-            if (fileWriter) {
-                fileWriter->flush();
-            }
+            //if (fileWriter) {
+            //    fileWriter->flush();
+            //}
         }
 
         void setAudioCallback(AudioDeviceCallback* callback, void* callbackContext) override {
@@ -238,7 +237,7 @@ aap::OboeAudioDeviceOut::OboeAudioDeviceOut(uint32_t sampleRate, uint32_t frames
         impl(sampleRate, framesPerCallback, numChannels, oboe::Direction::Output) {
     // creating output stream
 
-    if (outputFileDescriptor == -1) {
+    /*if (outputFileDescriptor == -1) {
         this->fileWriter = std::unique_ptr<choc::audio::AudioFileWriter>(nullptr);
     } else {
         auto stream = createOstreamFromFd(outputFileDescriptor);
@@ -252,7 +251,7 @@ aap::OboeAudioDeviceOut::OboeAudioDeviceOut(uint32_t sampleRate, uint32_t frames
         };
 
         this->fileWriter = formatWav.createWriter(stream, props);
-    }
+    }*/
 }
 
 void aap::OboeAudioDeviceIn::read(AudioBuffer *dstAudioData, int32_t bufferPosition, int32_t numFrames) {
@@ -262,7 +261,7 @@ void aap::OboeAudioDeviceIn::read(AudioBuffer *dstAudioData, int32_t bufferPosit
 void aap::OboeAudioDeviceOut::write(AudioBuffer *audioDataToWrite, int32_t bufferPosition,
                                     int32_t numFrames) {
     impl.copyAAPBufferForWriting(audioDataToWrite, bufferPosition, numFrames);
-    if (fileWriter) {
-        fileWriter->appendFrames(audioDataToWrite->audio);
-    }
+    //if (fileWriter) {
+    //    fileWriter->appendFrames(audioDataToWrite->audio);
+    //}
 }
