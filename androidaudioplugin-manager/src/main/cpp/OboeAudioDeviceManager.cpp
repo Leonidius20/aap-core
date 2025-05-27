@@ -4,6 +4,7 @@
 #include <containers/choc_VariableSizeFIFO.h>
 // #include "fdstream.h"
 #include <audio/choc_AudioFileFormat_WAV.h>
+#include "FileAudioDeviceOut.h"
 
 namespace aap {
 #define AAP_OBOE_IO_TIMEOUT_MILLISECONDS 0
@@ -101,7 +102,9 @@ aap::AudioDeviceOut *
 aap::OboeAudioDeviceManager::openDefaultOutput(uint32_t sampleRate, uint32_t framesPerCallback, int32_t numChannels, int outFileFd) {
     // FIXME: this should not be created twice
     //assert(output == nullptr);
-    output = std::make_shared<OboeAudioDeviceOut>(sampleRate, framesPerCallback, numChannels, outFileFd);
+
+    // todo: create a separate device manager for files and use that
+    output = std::make_shared<FileAudioDeviceOut>(sampleRate, framesPerCallback, numChannels, outFileFd);
     return output.get();
 }
 

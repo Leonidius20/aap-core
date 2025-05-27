@@ -2,7 +2,6 @@
 #if ANDROID
 #include <android/trace.h>
 #endif
-#include <memory>
 #include "FileAudioDeviceOut.h"
 
 aap::SimpleLinearAudioGraph::~SimpleLinearAudioGraph() {
@@ -71,8 +70,8 @@ aap::SimpleLinearAudioGraph::SimpleLinearAudioGraph(int32_t sampleRate, uint32_t
         AudioGraph(sampleRate, framesPerCallback, channelsInAudioBus),
         input(this, AudioDeviceManager::getInstance()->openDefaultInput(sampleRate, framesPerCallback, channelsInAudioBus)),
         output(this,
-               std::make_shared<FileAudioDeviceOut>(sampleRate, framesPerCallback, channelsInAudioBus, outFileFd).get()
-               // AudioDeviceManager::getInstance()->openDefaultOutput(sampleRate, framesPerCallback, channelsInAudioBus, outFileFd)
+               //std::make_shared<FileAudioDeviceOut>(sampleRate, framesPerCallback, channelsInAudioBus, outFileFd).get()
+                AudioDeviceManager::getInstance()->openDefaultOutput(sampleRate, framesPerCallback, channelsInAudioBus, outFileFd)
                ),
         plugin(this, nullptr),
         audio_data(this),

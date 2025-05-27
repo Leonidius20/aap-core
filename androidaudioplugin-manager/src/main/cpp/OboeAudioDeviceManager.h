@@ -2,6 +2,7 @@
 #define AAP_CORE_ANDROIDAUDIODEVICEMANAGER_H
 
 #include "AudioDeviceManager.h"
+#include "FileAudioDeviceOut.h"
 #include <oboe/Oboe.h>
 
 namespace aap {
@@ -12,7 +13,7 @@ namespace aap {
     class OboeAudioDeviceManager : public AudioDeviceManager {
         uint32_t frames_per_callback;
         std::shared_ptr<OboeAudioDeviceIn> input{nullptr};
-        std::shared_ptr<OboeAudioDeviceOut> output{nullptr};
+        std::shared_ptr<FileAudioDeviceOut> output{nullptr};
 
     public:
         OboeAudioDeviceManager() {}
