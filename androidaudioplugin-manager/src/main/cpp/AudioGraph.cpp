@@ -40,7 +40,7 @@ void aap::SimpleLinearAudioGraph::setPlugin(aap::RemotePluginInstance *instance)
 void
 aap::SimpleLinearAudioGraph::setAudioSource(uint8_t *data, int dataLength, const char *filename) {
     int32_t targetFrames = audio_data.setAudioSource(data, dataLength, filename);
-    output.getDevice()->targetNumOfFrames = targetFrames;
+    output.getDevice()->setTargetNumFrames(targetFrames);
 }
 
 void aap::SimpleLinearAudioGraph::addMidiEvent(uint8_t *data, int32_t length, int64_t timestampInNanoseconds) {

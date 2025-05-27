@@ -9,7 +9,6 @@
 #include "fdstream.h"
 #include <audio/choc_SampleBuffers.h>
 #include <audio/choc_AudioFileFormat_WAV.h>
-#include <limits>
 // #include <android/log.h>
 
 #define LOG_TAG "FileAudioDeviceOut"
@@ -18,38 +17,50 @@ namespace aap {
 
     class FileAudioDeviceOut : public AudioDeviceOut {
 
+    private:
+        uint32_t sampleRate;
+        int32_t numChannels;
+
     protected:
         void* callback_context;
         AudioDeviceCallback *aap_callback;
+        int fileDescriptor;
         std::unique_ptr<choc::audio::AudioFileWriter> fileWriter;
         AudioBuffer aap_buffer;
         uint32_t framesPerCallback;
+        int32_t targetNumOfFrames;
 
     public:
-        int32_t targetNumOfFrames = std::numeric_limits<int32_t>::max();
+
 
         FileAudioDeviceOut(uint32_t sampleRate, uint32_t framesPerCallback, int32_t numChannels, int outputFileDescriptor)
-            : aap_buffer(numChannels, (int32_t) framesPerCallback), framesPerCallback(framesPerCallback) {
+            : sampleRate(sampleRate), numChannels(numChannels), fileDescriptor(outputFileDescriptor), aap_buffer(numChannels, (int32_t) framesPerCallback), framesPerCallback(framesPerCallback) {
 
-            if (outputFileDescriptor == -1) {
-                this->fileWriter = std::unique_ptr<choc::audio::AudioFileWriter>(nullptr);
-                // __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, "Invalid out file descriptor (-1)");
-            } else {
-                auto stream = createOstreamFromFd(outputFileDescriptor);
-                choc::audio::WAVAudioFileFormat<true> formatWav{};
-                choc::audio::AudioFileProperties props {
-                        "wav",
-                        static_cast<double>(sampleRate),
-                        0, // todo: use same as input. This is why wav file is incorrect
-                        static_cast<uint32_t>(numChannels),
-                };
-
-                this->fileWriter = formatWav.createWriter(stream, props);
-            }
         }
 
         ~FileAudioDeviceOut() {
             aap_callback = nullptr;
+        }
+
+        void setTargetNumFrames(int32_t targetNumFrames) {
+            targetNumOfFrames = targetNumFrames;
+
+            if (fileDescriptor == -1) {
+                this->fileWriter = std::unique_ptr<choc::audio::AudioFileWriter>(nullptr);
+                // __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, "Invalid out file descriptor (-1)");
+            } else {
+                auto stream = createOstreamFromFd(fileDescriptor);
+                choc::audio::WAVAudioFileFormat<true> formatWav{};
+                choc::audio::AudioFileProperties props {
+                        "wav",
+                        static_cast<double>(sampleRate),
+                        static_cast<uint64_t>(targetNumFrames),
+                        static_cast<uint32_t>(numChannels),
+                };
+
+
+                this->fileWriter = formatWav.createWriter(stream, props);
+            }
         }
 
         void setAudioCallback(

@@ -93,19 +93,23 @@ int32_t aap::AudioDataSourceNode::setAudioSource(uint8_t *data, int dataLength, 
             auto stream = std::make_shared<std::istream>(&buffer);
             auto reader = format->createReader(stream);
             auto props = reader->getProperties();
-            AudioBuffer tmpData{(int32_t) props.numChannels, (int32_t) props.numFrames};
-            if (!reader->readFrames(0, tmpData.audio)) {
+            // AudioBuffer tmpData{(int32_t) props.numChannels, (int32_t) props.numFrames};
+            audio_data = std::make_unique<AudioBuffer>((int32_t) props.numChannels, (int32_t) props.numFrames);
+            if (!reader->readFrames(0, audio_data->audio)) {
                 AAP_ASSERT_FALSE;
                 return -1;
             }
 
-            // resample
-            auto durationInSeconds = 1.0 * props.numFrames / props.sampleRate;
-            auto targetFrames = (int32_t) (durationInSeconds * graph->getSampleRate());
-            audio_data = std::make_unique<AudioBuffer>((int32_t) props.numChannels, targetFrames);
-            choc::interpolation::sincInterpolate(audio_data->audio, tmpData.audio);
+            // todo: set processing chain to work in sample rate of file
 
-            return targetFrames;
+            // resample
+            //auto durationInSeconds = 1.0 * props.numFrames / props.sampleRate;
+            //auto targetFrames = (int32_t) (durationInSeconds * graph->getSampleRate());
+            //audio_data = std::make_unique<AudioBuffer>((int32_t) props.numChannels, targetFrames);
+            //choc::interpolation::sincInterpolate(audio_data->audio, tmpData.audio);
+
+            // return targetFrames;
+            return (int32_t) props.numFrames;
         }
     }
 
