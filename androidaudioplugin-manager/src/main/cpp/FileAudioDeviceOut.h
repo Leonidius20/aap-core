@@ -21,6 +21,9 @@ namespace aap {
         uint32_t sampleRate;
         int32_t numChannels;
 
+        int32_t numFramesProcessed = 0;
+        bool isRunning = false;
+
     protected:
         void* callback_context;
         AudioDeviceCallback *aap_callback;
@@ -71,25 +74,32 @@ namespace aap {
         }
 
         void startCallback() override {
+            isRunning = true;
             startLoop();
         }
 
         void stopCallback() override {
+            isRunning = false;
             // moved flushing to flushFile();
         }
 
         void write(aap::AudioBuffer *audioDataToWrite, int32_t bufferPosition, int32_t numFrames) override {
+            writeOut(audioDataToWrite, bufferPosition, numFrames);
+        }
+
+        void writeOut(aap::AudioBuffer *audioDataToWrite, int32_t bufferPosition, int32_t numFrames) {
             // write data to file and buffer (idk why we would need it in the buffer tbh)
-            //choc::buffer::FrameRange range{0, (uint32_t ) numFrames};
+            //choc::buffer::FrameRange range{0, (uint32_t) numFrames};
             //choc::buffer::copy(aap_buffer.audio.getFrameRange(range), audioDataToWrite->audio.getView().getFrameRange(range));
             if (fileWriter) {
-                fileWriter->appendFrames(audioDataToWrite->audio);
+                fileWriter->appendFrames(audioDataToWrite->audio.getStart(numFrames));
             }
+            numFramesProcessed += numFrames;
 
             // clear the buffers to prepare for new request
-            aap_buffer.audio.clear();
-            memset(aap_buffer.midi_in, 0, aap_buffer.midi_capacity);
-            memset(aap_buffer.midi_out, 0, aap_buffer.midi_capacity);
+            //aap_buffer.audio.clear();
+            //memset(aap_buffer.midi_in, 0, aap_buffer.midi_capacity);
+            //memset(aap_buffer.midi_out, 0, aap_buffer.midi_capacity);
             // memset(oboeAudioData, 0, numFrames * sizeof(float));
         }
 
@@ -97,15 +107,15 @@ namespace aap {
 
         // request audio from the framework
         void startLoop() {
-            int32_t numFramesProcessed = 0;
-            while(numFramesProcessed < targetNumOfFrames) {
+            while(numFramesProcessed < targetNumOfFrames && isRunning) {
                 // kick callback to generate some data
                 aap_callback(callback_context, &aap_buffer, framesPerCallback);
 
                 // write out
-                write(&aap_buffer, 0, framesPerCallback);
+                // todo: i suppose we can just remove this call from here altogether
+                // writeOut(&aap_buffer, 0, framesPerCallback);
 
-                numFramesProcessed += framesPerCallback;
+                // numFramesProcessed += framesPerCallback;
             }
             // maybe stop after that??
             flushFile();
