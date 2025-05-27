@@ -13,24 +13,21 @@ extern "C" {
 
 #define AAP_APP_LOG_TAG "AAPBarebonePluginSample"
 
-#define PLUGIN_URI "urn:org.androidaudioplugin/samples/aapbarebonepluginsample/TestFilter"
+#define PLUGIN_URI "urn:io.github.leonidius20/aap/BitCrusher"
 
-#define PARAM_ID_VOLUME_L 0
-#define PARAM_ID_VOLUME_R 1
-#define PARAM_ID_DELAY_L 2
-#define PARAM_ID_DELAY_R 3
-
-#define PARAM_ID_CLIP_THRESHOLD 4
+#define PARAM_ID_DOWNSAMPLING_FACTOR 0
+#define DEFAULT_DOWNSAMPLING_FACTOR 16
 
 typedef struct SamplePluginSpecific {
     AndroidAudioPluginHost host;
     float modL{0.5f};
     float modR{0.5f};
-    float modL_pn[128];
-    float modR_pn[128];
-    uint32_t delayL{0};
-    uint32_t delayR{0};
-    float clippingThreshold{0.5f}; // default - mid way
+
+    // todo: restore this file to how it was, return deleted params
+    uint32_t downsamplingFactor{DEFAULT_DOWNSAMPLING_FACTOR}; // 0 - 32
+    uint32_t downsampleCounter{0};
+    float heldLeftSample{0.0f};
+    float heldRightSample{0.0f};
 
     int32_t midiInPort{-1};
     int32_t midiOutPort{-1};
@@ -41,8 +38,6 @@ typedef struct SamplePluginSpecific {
 
     SamplePluginSpecific(AndroidAudioPluginHost *host) {
         this->host = *host;
-        for (size_t i = 0; i < 128; i++)
-            modL_pn[i] = modR_pn[i] = 0.5f;
     }
 } SamplePluginSpecific;
 
@@ -102,15 +97,6 @@ bool readMidi2Parameter(uint8_t *group, uint8_t* channel, uint8_t* key, uint8_t*
         return false;
     auto raw = (uint32_t*) ump;
     return aapReadMidi2ParameterSysex8(group, channel, key, extra, index, value, *raw, *(raw + 1), *(raw + 2), *(raw + 3));
-}
-
-float applyClipping(float sample, float threshold) {
-    if (sample > threshold) sample = threshold;
-    else if (sample < -threshold) sample = -threshold;
-
-    float divider = threshold == 0.0f ? 0.01f : threshold;
-
-    return sample / divider;
 }
 
 void sample_plugin_process(AndroidAudioPlugin *plugin,
@@ -182,7 +168,7 @@ process_acc:
             float mod;
             uint32_t intValue;
             switch (paramIndex) {
-                case PARAM_ID_VOLUME_L:
+                /*case PARAM_ID_VOLUME_L:
                     intValue = rawIntValue + (relative ? *(uint32_t*) (&ctx->modL) : 0);
                     mod = *(float*) (&intValue);
                     if (paramKey != 0)
@@ -209,10 +195,13 @@ process_acc:
                         break; // FIXME: implement or log it?
                     valueIn0To2048 = *((float*) &rawIntValue);
                     ctx->delayR = (uint32_t) valueIn0To2048 + (relative ? ctx->delayR : 0);
+                    break;*/
+                case PARAM_ID_DOWNSAMPLING_FACTOR: {
+                    float valueIn0To32 = *((float *) &rawIntValue);
+                    ctx->downsamplingFactor =
+                            (uint32_t) valueIn0To32 + (relative ? ctx->downsamplingFactor : 0);
                     break;
-                case PARAM_ID_CLIP_THRESHOLD:
-                    ctx->clippingThreshold = paramValue;
-                    break;
+                }
                 default:
                     continue; // invalid parameter index FIXME: log it
             }
@@ -220,14 +209,26 @@ process_acc:
     }
 
     for (int i = 0; i < size / sizeof(float); i++) {
-        if (i >= ctx->delayL) {
-            float leftSample = fIL[i - ctx->delayL] * ctx->modL;
-            fOL[i] = applyClipping(leftSample, ctx->clippingThreshold);
+        float leftSample = fIL[i];
+        float rightSample = fIR[i];
+
+        if (ctx->downsamplingFactor == 0) {
+            // no processing
+            fOL[i] = leftSample;
+            fOR[i] = rightSample;
+            continue;
         }
-        if (i >= ctx->delayR) {
-            float rightSample = fIR[i - ctx->delayR] * ctx->modR;
-            fOR[i] = applyClipping(rightSample, ctx->clippingThreshold);
+
+        if (ctx->downsampleCounter == 0) {
+            // capture sample
+            ctx->heldLeftSample = leftSample;
+            ctx->heldRightSample = rightSample;
         }
+
+        fOL[i] = ctx->heldLeftSample;
+        fOR[i] = ctx->heldRightSample;
+
+        ctx->downsampleCounter = (ctx->downsampleCounter + 1) % ctx->downsamplingFactor;
     }
 
     /* FIXME: This is for testing minBufferSize, but now it's gone because we don't use port for it.
@@ -262,22 +263,13 @@ aap_state_extension_t state_extension{nullptr,
                                       sample_plugin_set_state};
 
 // parameters extension
+aap_parameter_info_t parameter_infos[] {
+        {PARAM_ID_DOWNSAMPLING_FACTOR, "Downsampling Factor", "", 0, 32, DEFAULT_DOWNSAMPLING_FACTOR},
+};
 
 int32_t sample_plugin_get_parameter_count(aap_parameters_extension_t* ext, AndroidAudioPlugin* plugin) {
-    return 9;
+    return 1;
 }
-
-aap_parameter_info_t parameter_infos[] {
-        {0, "Output Volume L", "", 0.0, 1.0, 0.5},
-        {1, "Output Volume R", "", 0.0, 1.0, 0.5},
-        {2, "Delay L", "", 0, 2048, 0},
-        {3, "Delay R", "", 0, 2048, 256},
-        {PARAM_ID_CLIP_THRESHOLD, "Clipping Threshold", "", 0.0, 1.0, 0.5},
-        {11, "Stub Parameter 4", "", 0, 1,0 },
-        {12, "Stub Parameter 5", "", 0, 1,0 },
-        {13, "Stub Parameter 6", "", 0, 1,0 },
-        {14, "Stub Parameter 7", "", 0, 1,0 },
-};
 
 aap_parameter_info_t sample_plugin_get_parameter(aap_parameters_extension_t* ext, AndroidAudioPlugin* plugin, int32_t index) {
     return parameter_infos[index];
