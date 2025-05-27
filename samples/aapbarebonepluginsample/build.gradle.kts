@@ -9,9 +9,9 @@ apply { from ("../../common.gradle") }
 val enable_asan: Boolean by rootProject
 
 android {
-    namespace = "org.androidaudioplugin.aapbarebonepluginsample"
+    namespace = "io.github.leonidius20.aap.hardclipper"
     defaultConfig {
-        applicationId = "org.androidaudioplugin.aapbarebonepluginsample"
+        applicationId = "io.github.leonidius20.aap.hardclipper"
 
         externalNativeBuild {
             cmake {

@@ -13,7 +13,7 @@ extern "C" {
 
 #define AAP_APP_LOG_TAG "AAPBarebonePluginSample"
 
-#define PLUGIN_URI "urn:org.androidaudioplugin/samples/aapbarebonepluginsample/TestFilter"
+#define PLUGIN_URI "urn:io.github.leonidius20/aap/HardClipper"
 
 #define PARAM_ID_VOLUME_L 0
 #define PARAM_ID_VOLUME_R 1

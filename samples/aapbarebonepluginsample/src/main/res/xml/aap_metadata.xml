@@ -1,6 +1,6 @@
 <plugins xmlns="urn:org.androidaudioplugin.core">
-  <plugin name="Test Distortion" category="Effect" developer="AAP Developers"
-      unique-id="urn:org.androidaudioplugin/samples/aapbarebonepluginsample/TestFilter"
+  <plugin name="Hard Clipper" category="Effect" developer="Leonidius20"
+      unique-id="urn:io.github.leonidius20/aap/HardClipper"
       library="libaapbarebonepluginsample.so"
       gui:ui-view-factory="org.androidaudioplugin.ui.compose.ComposeAudioPluginViewFactory"
       xmlns:gui="urn://androidaudioplugin.org/extensions/gui">
