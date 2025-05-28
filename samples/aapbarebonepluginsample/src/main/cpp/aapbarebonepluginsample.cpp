@@ -7,6 +7,7 @@
 #include <aap/unstable/logging.h>
 #include <cassert>
 #include <cstring>
+#include <math.h>
 #include "cmidi2.h"
 
 extern "C" {
@@ -18,16 +19,20 @@ extern "C" {
 #define PARAM_ID_DOWNSAMPLING_FACTOR 0
 #define DEFAULT_DOWNSAMPLING_FACTOR 16
 
+#define PARAM_ID_BIT_DEPTH 1
+#define DEFAULT_BIT_DEPTH 0
+
 typedef struct SamplePluginSpecific {
     AndroidAudioPluginHost host;
     float modL{0.5f};
     float modR{0.5f};
 
-    // todo: restore this file to how it was, return deleted params
     uint32_t downsamplingFactor{DEFAULT_DOWNSAMPLING_FACTOR}; // 0 - 32
     uint32_t downsampleCounter{0};
     float heldLeftSample{0.0f};
     float heldRightSample{0.0f};
+
+    uint32_t bitDepth{DEFAULT_BIT_DEPTH};
 
     int32_t midiInPort{-1};
     int32_t midiOutPort{-1};
@@ -97,6 +102,16 @@ bool readMidi2Parameter(uint8_t *group, uint8_t* channel, uint8_t* key, uint8_t*
         return false;
     auto raw = (uint32_t*) ump;
     return aapReadMidi2ParameterSysex8(group, channel, key, extra, index, value, *raw, *(raw + 1), *(raw + 2), *(raw + 3));
+}
+
+float quantize(float sample, uint32_t bitDepth) {
+    if (bitDepth == 0) return sample; // do nothing
+
+    int levels = 1 << bitDepth; // 2^bitDepth, number of
+    // values that can be represented by 'bitDepth' bits
+
+    // sample is [-1; 1]
+    return roundf(sample * levels) / levels;
 }
 
 void sample_plugin_process(AndroidAudioPlugin *plugin,
@@ -202,6 +217,11 @@ process_acc:
                             (uint32_t) valueIn0To32 + (relative ? ctx->downsamplingFactor : 0);
                     break;
                 }
+                case PARAM_ID_BIT_DEPTH: {
+                    float valueIn0To32 = *((float *) &rawIntValue);
+                    ctx->bitDepth = (uint32_t) valueIn0To32 + (relative ? ctx->bitDepth : 0);
+                    break;
+                }
                 default:
                     continue; // invalid parameter index FIXME: log it
             }
@@ -213,16 +233,16 @@ process_acc:
         float rightSample = fIR[i];
 
         if (ctx->downsamplingFactor == 0) {
-            // no processing
-            fOL[i] = leftSample;
-            fOR[i] = rightSample;
+            // no downsampling, only bit depth reduction
+            fOL[i] = quantize(leftSample, ctx->bitDepth);
+            fOR[i] = quantize(rightSample, ctx->bitDepth);
             continue;
         }
 
         if (ctx->downsampleCounter == 0) {
             // capture sample
-            ctx->heldLeftSample = leftSample;
-            ctx->heldRightSample = rightSample;
+            ctx->heldLeftSample = quantize(leftSample, ctx->bitDepth);
+            ctx->heldRightSample = quantize(rightSample, ctx->bitDepth);
         }
 
         fOL[i] = ctx->heldLeftSample;
@@ -265,10 +285,11 @@ aap_state_extension_t state_extension{nullptr,
 // parameters extension
 aap_parameter_info_t parameter_infos[] {
         {PARAM_ID_DOWNSAMPLING_FACTOR, "Downsampling Factor", "", 0, 32, DEFAULT_DOWNSAMPLING_FACTOR},
+        {PARAM_ID_BIT_DEPTH, "Reduce Bit Depth to", "", 0, 32, DEFAULT_BIT_DEPTH},
 };
 
 int32_t sample_plugin_get_parameter_count(aap_parameters_extension_t* ext, AndroidAudioPlugin* plugin) {
-    return 1;
+    return 2;
 }
 
 aap_parameter_info_t sample_plugin_get_parameter(aap_parameters_extension_t* ext, AndroidAudioPlugin* plugin, int32_t index) {
