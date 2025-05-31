@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <cassert>
+#include <vector>
 
 #include "LocalDefinitions.h"
 #include "AudioDeviceManager.h"
@@ -33,7 +34,8 @@ namespace aap {
     class SimpleLinearAudioGraph : public AudioGraph {
         AudioDeviceInputNode input;
         AudioDeviceOutputNode output;
-        AudioPluginNode plugin;
+        std::vector<AudioPluginNode> plugins;
+        // AudioPluginNode plugin;
         AudioDataSourceNode audio_data;
         MidiSourceNode midi_input;
         MidiDestinationNode midi_output;

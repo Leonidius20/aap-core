@@ -34,7 +34,10 @@ void aap::SimpleLinearAudioGraph::processAudio(AudioBuffer *audioData, int32_t n
 }
 
 void aap::SimpleLinearAudioGraph::setPlugin(aap::RemotePluginInstance *instance) {
-    plugin.setPlugin(instance);
+    auto &pluginNode = plugins.emplace_back(this, instance);
+    auto ptr = &pluginNode;
+    nodes.insert(nodes.begin() + 3 + plugins.size(), ptr);
+    //plugin.setPlugin(instance);
 }
 
 void
@@ -74,14 +77,16 @@ aap::SimpleLinearAudioGraph::SimpleLinearAudioGraph(int32_t sampleRate, uint32_t
                //std::make_shared<FileAudioDeviceOut>(sampleRate, framesPerCallback, channelsInAudioBus, outFileFd).get()
                 AudioDeviceManager::getInstance()->openDefaultOutput(sampleRate, framesPerCallback, channelsInAudioBus, outFileFd)
                ),
-        plugin(this, nullptr),
+        //plugin(this, nullptr),
+        plugins(),
         audio_data(this),
         midi_input(this, nullptr, sampleRate, framesPerCallback, CMIDI2_PROTOCOL_TYPE_MIDI2, AAP_PLUGIN_PLAYER_DEFAULT_MIDI_RING_BUFFER_SIZE),
         midi_output(this, AAP_PLUGIN_PLAYER_DEFAULT_MIDI_RING_BUFFER_SIZE) {
     nodes.emplace_back(&input);
     nodes.emplace_back(&audio_data);
     nodes.emplace_back(&midi_input);
-    nodes.emplace_back(&plugin);
+
+    //nodes.emplace_back(&plugin);
     nodes.emplace_back(&midi_output);
     nodes.emplace_back(&output);
 
@@ -93,5 +98,6 @@ void aap::SimpleLinearAudioGraph::enableAudioRecorder() {
 }
 
 void aap::SimpleLinearAudioGraph::setPresetIndex(int index) {
-    plugin.setPresetIndex(index);
+    plugins[index].setPresetIndex(index);
+    // plugin.setPresetIndex(index);
 }

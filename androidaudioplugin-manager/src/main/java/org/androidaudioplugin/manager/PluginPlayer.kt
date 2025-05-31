@@ -37,9 +37,9 @@ class PluginPlayer private constructor(private val native: Long) : AutoCloseable
 
     private external fun deletePluginPlayer(native: Long)
 
-    fun setPlugin(plugin: NativeRemotePluginInstance) = setPluginNative(native, plugin.client, plugin.instanceId)
+    fun addPlugin(plugin: NativeRemotePluginInstance) = addPluginNative(native, plugin.client, plugin.instanceId)
 
-    private external fun setPluginNative(player: Long, nativeClient: Long, instanceId: Int)
+    private external fun addPluginNative(player: Long, nativeClient: Long, instanceId: Int)
 
     fun loadAudioResource(bytes: ByteArray, filename: String) =
         loadAudioResourceNative(native, bytes, filename)
@@ -102,7 +102,11 @@ class PluginPlayer private constructor(private val native: Long) : AutoCloseable
     }
 
     // non-MIDI events
-    fun setPresetIndex(index: Int) = setPresetIndexNative(native, index)
+    // plugin number = index of plugin in chain, starting from 0
+    fun setPresetIndex(
+        index: Int,
+        pluginNumber: Int = 0,
+    ) = setPresetIndexNative(native, pluginNumber, index)
 
-    private external fun setPresetIndexNative(native: Long, index: Int)
+    private external fun setPresetIndexNative(native: Long, pluginNumber: Int, index: Int)
 }

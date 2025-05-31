@@ -4,12 +4,8 @@ import android.content.Context
 import android.media.AudioManager
 import android.os.Build
 import android.view.View
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.androidaudioplugin.PluginInformation
 import org.androidaudioplugin.PluginServiceInformation
 import org.androidaudioplugin.composeaudiocontrols.DiatonicKeyboardNoteExpressionOrigin
@@ -59,7 +55,7 @@ class PluginDetailsScope private constructor(val pluginInfo: PluginInformation,
         val frames = 1024 //audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER).toInt()
         val channelCount = 2
         PluginPlayer.create(sampleRate, frames, channelCount).apply {
-            setPlugin(instance!!)
+            addPlugin(instance!!)
             manager.context.assets.open(PluginPlayer.sample_audio_filename).use {
                 val bytes = ByteArray(it.available())
                 it.read(bytes)

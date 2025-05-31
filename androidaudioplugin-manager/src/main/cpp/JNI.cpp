@@ -76,7 +76,7 @@ Java_org_androidaudioplugin_manager_PluginPlayer_playPreloadedAudioNative(JNIEnv
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_org_androidaudioplugin_manager_PluginPlayer_setPluginNative(JNIEnv *env, jobject thiz,
+Java_org_androidaudioplugin_manager_PluginPlayer_addPluginNative(JNIEnv *env, jobject thiz,
                                                                  jlong player, jlong nativeClient,
                                                                  jint instanceId) {
     auto client = (aap::PluginClient*) nativeClient;
@@ -94,6 +94,6 @@ Java_org_androidaudioplugin_manager_PluginPlayer_enableAudioRecorderNative(JNIEn
 extern "C"
 JNIEXPORT void JNICALL
 Java_org_androidaudioplugin_manager_PluginPlayer_setPresetIndexNative(JNIEnv *env, jobject thiz,
-                                                                      jlong player, jint index) {
-    ((aap::PluginPlayer*) player)->setPresetIndex(index);
+                                                                      jlong player, jint pluginNumber, jint index) {
+    ((aap::PluginPlayer*) player)->setPresetIndex(pluginNumber, index);
 }

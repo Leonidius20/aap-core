@@ -27,7 +27,7 @@ namespace aap {
 
         void enableAudioRecorder();
 
-        void setPresetIndex(int index);
+        void setPresetIndex(int pluginNumber, int index);
     };
 }
 
