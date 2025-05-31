@@ -34,8 +34,10 @@ void aap::SimpleLinearAudioGraph::processAudio(AudioBuffer *audioData, int32_t n
 }
 
 void aap::SimpleLinearAudioGraph::setPlugin(aap::RemotePluginInstance *instance) {
-    auto &pluginNode = plugins.emplace_back(this, instance);
-    auto ptr = &pluginNode;
+    auto &pluginNode = plugins.emplace_back(
+            std::make_shared<AudioPluginNode>(this, instance)
+                    );
+    auto ptr = pluginNode.get();
     nodes.insert(nodes.begin() + 3 + plugins.size(), ptr);
     //plugin.setPlugin(instance);
 }
@@ -98,6 +100,6 @@ void aap::SimpleLinearAudioGraph::enableAudioRecorder() {
 }
 
 void aap::SimpleLinearAudioGraph::setPresetIndex(int index) {
-    plugins[index].setPresetIndex(index);
+    plugins[index]->setPresetIndex(index);
     // plugin.setPresetIndex(index);
 }
