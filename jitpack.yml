@@ -1,5 +1,6 @@
 jdk:
   - openjdk17
 install:
+  - git submodule sync --recursive
   - git submodule update --init --recursive
-  - ./gradlew install
+  - ./gradlew clean -Pgroup=$GROUP -Pversion=$VERSION -xtest -xlint assemble publishToMavenLocal --console=plain --info
