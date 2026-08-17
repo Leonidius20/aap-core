@@ -3,4 +3,4 @@ jdk:
 install:
   - git submodule sync --recursive
   - git submodule update --init --recursive
-  - ./gradlew clean -Pgroup=$GROUP -Pversion=$VERSION -xtest -xlint assemble publishToMavenLocal --console=plain --info
+  - ./gradlew clean -Pgroup=$GROUP -Pversion=$VERSION -xtest -xlint :androidaudioplugin:assemble :androidaudioplugin-manager:assemble :androidaudioplugin:publishToMavenLocal :androidaudioplugin-manager:publishToMavenLocal --console=plain --info
