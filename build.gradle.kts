@@ -38,3 +38,26 @@ subprojects {
 tasks.register<Delete>("clean") {
     delete(rootProject.buildDir)
 }
+
+// to diagnose prefab fails on jitpack
+val printCxxLogs = tasks.register("printCxxLogs") {
+    doLast {
+        println("=== SEARCHING FOR CXX LOGS ===")
+        // Look into every module's build and .cxx directories explicitly
+        subprojects.forEach { subproject ->
+            val cxxDir = file("${subproject.projectDir}/.cxx")
+            val buildCxxDir = file("${subproject.buildDir}/intermediates/cxx")
+
+            listOf(cxxDir, buildCxxDir).forEach { dir ->
+                if (dir.exists()) {
+                    dir.walkTopDown()
+                        .filter { it.isFile && (it.name == "prefab_command" || it.name.endsWith(".json") || it.name.endsWith(".log")) }
+                        .forEach { logFile ->
+                            println("\n--- FILE: ${logFile.absolutePath} ---")
+                            println(logFile.readText())
+                        }
+                }
+            }
+        }
+    }
+}

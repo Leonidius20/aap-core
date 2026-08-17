@@ -1,6 +1,8 @@
 jdk:
   - openjdk17
+before_install:
+  - unset JAVA_TOOL_OPTIONS # due to AGP bug https://issuetracker.google.com/issues/353259702?pli=1 fixed in agp 8.7.0 and up
 install:
   - git submodule sync --recursive
   - git submodule update --init --recursive
-  - ./gradlew clean -Pgroup=$GROUP -Pversion=$VERSION -xtest -xlint :androidaudioplugin:assemble :androidaudioplugin-manager:assemble :androidaudioplugin:publishToMavenLocal :androidaudioplugin-manager:publishToMavenLocal --console=plain --info
+  - ./gradlew clean -Pgroup=$GROUP -Pversion=$VERSION -xtest -xlint :androidaudioplugin:publishToMavenLocal :androidaudioplugin-manager:publishToMavenLocal --console=plain --info || ./gradlew printCxxLogs
